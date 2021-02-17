@@ -10,7 +10,7 @@ namespace Sugarscape
 		SpriteBatch spriteBatch;
 		Grid<GoLCell> grid;
 		int updateCounter = 0;
-		int updateMod = 1;
+		int updateMod = 60;
 		Texture2D pixel;
 
 		public Game1()
@@ -64,9 +64,12 @@ namespace Sugarscape
 
 		public void DrawGrid(Microsoft.Xna.Framework.GameTime gameTime, Microsoft.Xna.Framework.Graphics.SpriteBatch sb)
 		{
+			//grid.ptrDraw.ForEachCell(
+			//	(cell, x, y) => 
+			//		sb.Draw(pixel, new Rectangle(1 + x * 32, 1 + y * 32, 31, 31), new Color(cell.GetLife(), cell.GetLife(), cell.GetLife())));
 			grid.ptrDraw.ForEachCell(
-				(cell, x, y) => 
-					sb.Draw(pixel, new Rectangle(1 + x * 32, 1 + y * 32, 31, 31), new Color(cell.GetLife(), cell.GetLife(), cell.GetLife())));
+				(cell, x, y) =>
+					sb.Draw(pixel, new Rectangle(1 + x * 32, 1 + y * 32, 31, 31), cell.GetAlive() ? Color.White : Color.Black));
 		}
 	}
 }
