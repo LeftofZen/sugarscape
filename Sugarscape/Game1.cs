@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,22 +11,24 @@ namespace Sugarscape
 	{
 		GraphicsDeviceManager _graphics;
 		SpriteBatch spriteBatch;
-		World<GoLCell> grid;
+		World<SSCell> grid;
 		int updateCounter = 0;
 		int updateMod = 6;
 		int cellDrawSize = 16;
+		int gridSize = 32;
 		Texture2D pixel;
 		SpriteFont font;
 		bool pauseSim;
 		Keys[] prevKeysPressed;
 		bool prevLeftButton;
+		Agent a = new Agent();
 
 		public Game1()
 		{
 			_graphics = new GraphicsDeviceManager(this);
 			Content.RootDirectory = "Content";
 			IsMouseVisible = true;
-			grid = new World<GoLCell>(32);
+			grid = new World<SSCell>(gridSize);
 			prevKeysPressed = new Keys[256];
 		}
 
@@ -35,6 +38,8 @@ namespace Sugarscape
 			_graphics.PreferredBackBufferWidth = 512;
 			_graphics.PreferredBackBufferHeight = 512;
 			_graphics.ApplyChanges();
+
+			a.Location = (gridSize/2, gridSize/2);
 
 			base.Initialize();
 		}
@@ -69,6 +74,11 @@ namespace Sugarscape
 				grid.Update();
 			}
 
+			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.A))
+			{
+				a.Update(grid.ptrDraw);
+			}
+
 			var leftButton = Mouse.GetState().LeftButton == ButtonState.Pressed;
 			if (leftButton && !prevLeftButton)
 			{
@@ -84,6 +94,8 @@ namespace Sugarscape
 				{
 					grid.Update();
 				}
+
+				//a.Update(grid.ptrDraw);
 			}
 
 			prevKeysPressed = newKeysPressed;
@@ -95,7 +107,14 @@ namespace Sugarscape
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
+
 			DrawGrid(gameTime, spriteBatch);
+
+			spriteBatch.Draw(
+				pixel,
+				new Rectangle(a.Location.x * cellDrawSize + 4, a.Location.y * cellDrawSize + 4, cellDrawSize - 8, cellDrawSize - 8),
+				Color.Green);
+
 			spriteBatch.End();
 
 			base.Draw(gameTime);
@@ -118,7 +137,7 @@ namespace Sugarscape
 					//sb.Draw(pixel, rect, cell.Alive ? Color.White : Color.Black);
 					//var n = ((GoLCell)cell).GetNeighbours(grid.ptrDraw);
 
-					((GoLCell)cell).Draw(spriteBatch, grid.ptrDraw, rect, pixel);
+					((SSCell)cell).Draw(spriteBatch, grid.ptrDraw, rect, pixel);
 
 				});
 

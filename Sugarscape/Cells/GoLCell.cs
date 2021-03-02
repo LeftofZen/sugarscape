@@ -10,7 +10,7 @@ namespace Sugarscape.Cells
 
 		public GoLCell()
 		{
-			//Alive = rnd.Next(0, 2) == 1;
+			Alive = rnd.Next(0, 2) == 1;
 		}
 
 		public GoLCell(bool isAlive)
@@ -46,11 +46,20 @@ namespace Sugarscape.Cells
 		public (int x, int y) Location { get; set; }
 	}
 
-	static class GoLCellExtension
+	static class CellDrawExtension
 	{
 		public static void Draw(this GoLCell cell, SpriteBatch sb, IGridCell[,] currGrid, Rectangle bounds, Texture2D pixel)
 		{
 			sb.Draw(pixel, bounds, cell.Alive ? Color.White : Color.Black);
+			//var n = cell.GetNeighbours(currGrid);
+			//sb.DrawString(font, n.ToString(), new Vector2(xx + 1, yy + 1), Color.Black);
+			//sb.DrawString(font, n.ToString(), new Vector2(xx, yy), Color.White);
+		}
+		public static void Draw(this SSCell cell, SpriteBatch sb, IGridCell[,] currGrid, Rectangle bounds, Texture2D pixel)
+		{
+			var percent = (float)cell.sugarLevel / cell.sugarCapacity;
+			var green = new Color(percent, percent, 0f);
+			sb.Draw(pixel, bounds, green);
 			//var n = cell.GetNeighbours(currGrid);
 			//sb.DrawString(font, n.ToString(), new Vector2(xx + 1, yy + 1), Color.Black);
 			//sb.DrawString(font, n.ToString(), new Vector2(xx, yy), Color.White);
