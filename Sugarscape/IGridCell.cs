@@ -1,4 +1,6 @@
-﻿namespace Sugarscape
+﻿using Microsoft.Xna.Framework;
+
+namespace Sugarscape
 {
 	interface IGridCell
 	{
@@ -6,6 +8,6 @@
 
 		bool Alive { get; set; }
 
-		(int x, int y) Location { get; set; }
+		Point Location { get; set; }
 	}
 }

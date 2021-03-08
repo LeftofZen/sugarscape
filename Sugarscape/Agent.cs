@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 using Sugarscape.Cells;
 
 namespace Sugarscape
@@ -11,24 +12,73 @@ namespace Sugarscape
 
 	class Agent : IAgent
 	{
-		public void Update(IGridCell[,] grid)
+		public Agent(float hunger, float metabolism)
 		{
-			var list = new List<(IGridCell, (int, int))>()
-			{
-				(grid.At(Location.x    , Location.y - 1), (-1, 0)),
-				(grid.At(Location.x    , Location.y + 1), (+1, 0)),
-				(grid.At(Location.x + 1, Location.y), (0, +1)),
-				(grid.At(Location.x - 1, Location.y), (0, -1)),
-			};
-
-			var max = list.Max(v => (SSCell)v.Item1);
-			var item = list.Where(v => v.Item1 == max).Single();
-			Location = (Location.x - item.Item2.Item1, Location.y - item.Item2.Item2);
+			this.hunger = hunger;
+			this.activeMetabolism = metabolism;
 		}
 
-		public (int x, int y) Location { get; set; }
+		public void Update(IGridCell[,] grid)
+		{
+			var surroundingSquares = new List<(IGridCell cell, Point coords)>()
+			{
+				(grid.At(Location.X    , Location.Y    ), new Point(0,  0)),
 
-		float hunger = 0f;
-		float metabolism = 0f;
+				(grid.At(Location.X    , Location.Y + 1), new Point(0, +1)),
+				(grid.At(Location.X    , Location.Y - 1), new Point(0, -1)),
+				(grid.At(Location.X + 1, Location.Y), new Point(+1, 0)),
+				(grid.At(Location.X - 1, Location.Y), new Point(-1, 0)),
+
+				(grid.At(Location.X + 1, Location.Y + 1), new Point(+1, +1)),
+				(grid.At(Location.X + 1, Location.Y - 1), new Point(+1, -1)),
+				(grid.At(Location.X - 1, Location.Y + 1), new Point(-1, +1)),
+				(grid.At(Location.X - 1, Location.Y - 1), new Point(-1, -1)),
+			};
+
+			surroundingSquares = surroundingSquares
+				.Where(a => a.coords != lastLocation && a.coords != Location && ((SSCell)a.cell).sugarLevel > minLandValueToEat)
+				.ToList();
+
+			if (surroundingSquares.Count > 0)
+			{
+				var max = surroundingSquares.Max(v => (SSCell)v.cell);
+				var item = surroundingSquares.Where(v => v.cell == max).Single();
+
+				lookingAtCell = max.Location;
+
+				// if we're hungry
+				if (hunger >20f)
+				{
+					Location = lookingAtCell;
+					var ssCell = (SSCell)item.cell;
+					hunger -= ssCell.Eat(hunger);
+					hunger += activeMetabolism * new Vector2(item.coords.X, item.coords.Y).Length();
+				}
+			}
+
+			hunger += idleMetabolism;
+
+			hunger = Math.Clamp(hunger, 0, maxHunger);
+		}
+
+		public Point Location
+		{
+			get => location;
+			set
+			{
+				lastLocation = location;
+				location = value;
+			}
+		}
+		Point location;
+
+		public float maxHunger = 1000f;
+		public float hunger = 0f;
+		float activeMetabolism = 10f;
+		float idleMetabolism = 5f;
+		float minLandValueToEat = 100f;
+		public Point lastLocation;
+		public Point lookingAtCell;
+
 	}
 }

@@ -28,7 +28,7 @@ namespace Sugarscape.Cells
 
 		public int GetNeighbours(IGridCell[,] currentGrid)
 		{
-			var (x, y) = (Location.x, Location.y);
+			var (x, y) = (Location.X, Location.Y);
 			var aliveNeighbours = 0;
 			aliveNeighbours += currentGrid.At(x - 1, y - 1).Alive ? 1 : 0;
 			aliveNeighbours += currentGrid.At(x, y - 1).Alive ? 1 : 0;
@@ -43,7 +43,9 @@ namespace Sugarscape.Cells
 
 		public bool Alive { get; set; }
 
-		public (int x, int y) Location { get; set; }
+		public float Value { get; set; }
+
+		public Point Location { get; set; }
 	}
 
 	static class CellDrawExtension

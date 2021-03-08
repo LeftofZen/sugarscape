@@ -1,9 +1,12 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Sugarscape
 {
 	static class GridExtensions
 	{
+		public static IGridCell At(this IGridCell[,] grid, Point p) => At(grid, p.X, p.Y);
+
 		public static IGridCell At(this IGridCell[,] grid, int x, int y)
 		{
 			var sizeX = grid.GetLength(1);
@@ -11,6 +14,13 @@ namespace Sugarscape
 			x = ((x % sizeX) + sizeX) % sizeX;
 			y = ((y % sizeY) + sizeY) % sizeY;
 			return grid[y, x];
+		}
+
+		public static Point TransformWorldToLocal(IGridCell[,] grid, Point p)
+		{
+			var sizeX = grid.GetLength(1);
+			var sizeY = grid.GetLength(0);
+			return new Point(((p.X % sizeX) + sizeX) % sizeX, ((p.Y % sizeY) + sizeY) % sizeY);
 		}
 
 		public static void ForEachCell(this IGridCell[,] grid, Func<IGridCell> func)

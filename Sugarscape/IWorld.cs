@@ -2,6 +2,6 @@
 {
 	interface IWorld
 	{
-		//IGridCell GetGridCell(int x, int y);
+		//IGridCell GetGridCellPoint;
 	}
 }

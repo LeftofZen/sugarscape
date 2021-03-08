@@ -1,8 +1,9 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
+using MonoGame.Extended.Graphics;
 using Sugarscape.Cells;
 
 namespace Sugarscape
@@ -13,7 +14,7 @@ namespace Sugarscape
 		SpriteBatch spriteBatch;
 		World<SSCell> grid;
 		int updateCounter = 0;
-		int updateMod = 6;
+		int updateMod = 5;
 		int cellDrawSize = 16;
 		int gridSize = 32;
 		Texture2D pixel;
@@ -21,7 +22,8 @@ namespace Sugarscape
 		bool pauseSim;
 		Keys[] prevKeysPressed;
 		bool prevLeftButton;
-		Agent a = new Agent();
+		bool prevRightButton;
+		Agent a = new Agent(0, 80);
 
 		public Game1()
 		{
@@ -39,7 +41,7 @@ namespace Sugarscape
 			_graphics.PreferredBackBufferHeight = 512;
 			_graphics.ApplyChanges();
 
-			a.Location = (gridSize/2, gridSize/2);
+			a.Location = new Point(gridSize / 2, gridSize / 2);
 
 			base.Initialize();
 		}
@@ -59,25 +61,11 @@ namespace Sugarscape
 		protected override void Update(GameTime gameTime)
 		{
 			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+			{
 				Exit();
+			}
 
 			var newKeysPressed = Keyboard.GetState().GetPressedKeys();
-
-
-			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.P))
-			{
-				pauseSim = !pauseSim;
-			}
-
-			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.Space))
-			{
-				grid.Update();
-			}
-
-			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.A))
-			{
-				a.Update(grid.ptrDraw);
-			}
 
 			var leftButton = Mouse.GetState().LeftButton == ButtonState.Pressed;
 			if (leftButton && !prevLeftButton)
@@ -88,14 +76,39 @@ namespace Sugarscape
 			}
 			prevLeftButton = leftButton;
 
+			var rightButton = Mouse.GetState().RightButton == ButtonState.Pressed;
+			if (rightButton && !prevRightButton)
+			{
+				var pos = Mouse.GetState().Position;
+				var gridPos = new Point(pos.X / cellDrawSize, pos.Y / cellDrawSize);
+				a.Location = gridPos;
+			}
+			prevRightButton = rightButton;
+
+			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.P))
+			{
+				pauseSim = !pauseSim;
+			}
+
+			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.Space))
+			{
+				grid.Update();
+				grid.FlipBuffers();
+			}
+
+			if (IsNewKeyPress(prevKeysPressed, newKeysPressed, Keys.A))
+			{
+				a.Update(grid.ptrDraw);
+			}
+
 			if (!pauseSim)
 			{
 				if (updateCounter++ % updateMod == 0)
 				{
 					grid.Update();
+					a.Update(grid.ptrUpdate);
+					grid.FlipBuffers();
 				}
-
-				//a.Update(grid.ptrDraw);
 			}
 
 			prevKeysPressed = newKeysPressed;
@@ -110,10 +123,24 @@ namespace Sugarscape
 
 			DrawGrid(gameTime, spriteBatch);
 
-			spriteBatch.Draw(
-				pixel,
-				new Rectangle(a.Location.x * cellDrawSize + 4, a.Location.y * cellDrawSize + 4, cellDrawSize - 8, cellDrawSize - 8),
-				Color.Green);
+			var agentPercentHunger = a.hunger / a.maxHunger;
+			var agentScreenSpace = GridExtensions.TransformWorldToLocal(grid.ptrDraw, a.Location);
+
+			// draw agent
+			spriteBatch.FillRectangle(
+				new Rectangle(agentScreenSpace.X * cellDrawSize + 4, agentScreenSpace.Y * cellDrawSize + 4, cellDrawSize - 8, cellDrawSize - 8),
+				new Color(agentPercentHunger, agentPercentHunger, 1 - agentPercentHunger));
+
+			// draw agent looking-at cell
+			var agentScreenSpaceLookAt = GridExtensions.TransformWorldToLocal(grid.ptrDraw, a.lookingAtCell);
+			spriteBatch.DrawRectangle(
+				new Rectangle(agentScreenSpaceLookAt.X * cellDrawSize, agentScreenSpaceLookAt.Y * cellDrawSize, cellDrawSize, cellDrawSize),
+				Color.White);
+			// draw agent looking-at cell
+			var agentScreenSpaceLastLocation = GridExtensions.TransformWorldToLocal(grid.ptrDraw, a.lastLocation);
+			spriteBatch.DrawRectangle(
+				new Rectangle(agentScreenSpaceLastLocation.X * cellDrawSize, agentScreenSpaceLastLocation.Y * cellDrawSize, cellDrawSize, cellDrawSize),
+				Color.Blue);
 
 			spriteBatch.End();
 
@@ -121,7 +148,7 @@ namespace Sugarscape
 		}
 
 
-		public void DrawGrid(Microsoft.Xna.Framework.GameTime gameTime, Microsoft.Xna.Framework.Graphics.SpriteBatch sb)
+		public void DrawGrid(GameTime gameTime, SpriteBatch sb)
 		{
 			//grid.ptrDraw.ForEachCell(
 			//	(cell, x, y) =>

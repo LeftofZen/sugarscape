@@ -1,4 +1,6 @@
-﻿namespace Sugarscape
+﻿using Microsoft.Xna.Framework;
+
+namespace Sugarscape
 {
 	class World<T> : IWorld where T : IGridCell, new()
 	{
@@ -18,8 +20,8 @@
 			bufA.ForEachCell(() => new T());
 			bufB.ForEachCell(() => new T());
 
-			bufA.ForEachCell((cell, x, y) => { cell.Location = (x, y); });
-			bufB.ForEachCell((cell, x, y) => { cell.Location = (x, y); });
+			bufA.ForEachCell((cell, x, y) => { cell.Location = new Point(x, y); });
+			bufB.ForEachCell((cell, x, y) => { cell.Location = new Point(x, y); });
 
 			ptrUpdate = bufA;
 			ptrDraw = bufB;
@@ -35,7 +37,6 @@
 		public void Update()
 		{
 			ptrDraw.ForEachCell((cell, x, y) => cell.Update(ptrDraw, ptrUpdate[y,x]));
-			FlipBuffers();
 		}
 	}
 }
